@@ -8,18 +8,15 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Proc;
-import hudson.maven.AbstractMavenProject;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.FreeStyleProject;
 import hudson.model.JDK;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,7 +25,6 @@ import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.deploy.weblogic.ArtifactSelector;
 import org.jenkinsci.plugins.deploy.weblogic.FreeStyleJobArtifactSelectorImpl;
-import org.jenkinsci.plugins.deploy.weblogic.MavenJobArtifactSelectorImpl;
 import org.jenkinsci.plugins.deploy.weblogic.WeblogicDeploymentPluginLog;
 import org.jenkinsci.plugins.deploy.weblogic.WeblogicDeploymentPlugin.WeblogicDeploymentPluginDescriptor;
 import org.jenkinsci.plugins.deploy.weblogic.data.DeploymentTaskResult;
@@ -137,7 +133,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 			fullArtifactFinalName = selectedArtifact.getName();
 		} catch (Throwable e) {
 			e.printStackTrace(listener.getLogger());
-            listener.error("[WeblogicDeploymentPlugin] - Failed to get artifact from archive directory : " + e.getMessage());
+            listener.error("[WeblogicDeploymentPlugin] - Failed to get artifact from archive directory.");
             IOUtils.closeQuietly(deploymentLogOut);
             throw new DeploymentTaskException(new DeploymentTaskResult(WebLogicPreRequisteStatus.OK, WebLogicDeploymentStatus.ABORTED, convertParameters(task, envVars), null));
         }

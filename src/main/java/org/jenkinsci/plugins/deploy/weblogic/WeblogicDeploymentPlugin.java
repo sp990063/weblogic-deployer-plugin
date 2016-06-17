@@ -6,17 +6,17 @@ package org.jenkinsci.plugins.deploy.weblogic;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.init.Initializer;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.BuildListener;
-import hudson.model.Result;
-import hudson.model.TopLevelItem;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import hudson.model.Cause;
 import hudson.model.Hudson;
 import hudson.model.JDK;
 import hudson.model.Job;
+import hudson.model.Result;
+import hudson.model.TopLevelItem;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
@@ -45,12 +45,12 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.deploy.weblogic.configuration.WeblogicDeploymentConfiguration;
+import org.jenkinsci.plugins.deploy.weblogic.data.DeploymentTask;
 import org.jenkinsci.plugins.deploy.weblogic.data.DeploymentTaskResult;
 import org.jenkinsci.plugins.deploy.weblogic.data.WebLogicDeploymentStatus;
 import org.jenkinsci.plugins.deploy.weblogic.data.WebLogicPreRequisteStatus;
 import org.jenkinsci.plugins.deploy.weblogic.data.WebLogicStageMode;
 import org.jenkinsci.plugins.deploy.weblogic.data.WeblogicEnvironment;
-import org.jenkinsci.plugins.deploy.weblogic.data.DeploymentTask;
 import org.jenkinsci.plugins.deploy.weblogic.exception.DeploymentTaskException;
 import org.jenkinsci.plugins.deploy.weblogic.exception.LoadingFileException;
 import org.jenkinsci.plugins.deploy.weblogic.jdk.JdkToolService;
@@ -271,7 +271,7 @@ public class WeblogicDeploymentPlugin extends Recorder {
 		}
 		
 		if(isSpecifiedDeploymentStrategyValue && !hasAtLeastOneBuildCauseChecked(build, selectedDeploymentStrategyIds)){
-			listener.getLogger().println("[WeblogicDeploymentPlugin] - Not properly build causes expected (configured=" +StringUtils.join(selectedDeploymentStrategyIds,';')+ ") (currents=" +StringUtils.join(build.getCauses(),';')+ ") : The plugin execution is disabled.");
+			listener.getLogger().println("[WeblogicDeploymentPlugin] - Current build causes do not contain any of the configured (configured=" +StringUtils.join(selectedDeploymentStrategyIds,';')+ ") (currents=" +StringUtils.join(build.getCauses(),';')+ ") : The plugin execution is disabled.");
 			return WebLogicPreRequisteStatus.OTHER_TRIGGER_CAUSE;
 		}
 		
@@ -305,7 +305,7 @@ public class WeblogicDeploymentPlugin extends Recorder {
 				
 		// Verification build SUCCESS
 		if (build.getResult().isWorseThan(Result.SUCCESS)) {
-			listener.getLogger().println("[WeblogicDeploymentPlugin] - build didn't finished successfully. The plugin execution is disabled.");
+			listener.getLogger().println("[WeblogicDeploymentPlugin] - Build didn't finish successfully. The plugin execution is disabled.");
 			return WebLogicPreRequisteStatus.BUILD_FAILED;
 		}
 
@@ -745,12 +745,12 @@ public class WeblogicDeploymentPlugin extends Recorder {
 		boolean hasUnsuccessfullPrerequisite = CollectionUtils.exists(results, new PreRequisiteStatusUnSuccesfullPredicate());
         boolean hasUnsuccessfullTask = CollectionUtils.exists(results, new TaskStatusUnSuccesfullPredicate());
 
-        if (buildUnstableWhenDeploymentUnstable && hasUnsuccessfullPrerequisite) {
-			build.setResult(Result.UNSTABLE);
-		} else 
-		
-		// On teste si au moins une des taches est KO
-		if (mustExitOnFailure && hasUnsuccessfullTask) {
+        if (hasUnsuccessfullPrerequisite) {
+            if (buildUnstableWhenDeploymentUnstable) {
+                build.setResult(Result.UNSTABLE);
+            }
+		} else if (mustExitOnFailure && hasUnsuccessfullTask) {
+	        // On teste si au moins une des taches est KO
 			build.setResult(Result.FAILURE);
 		}
 		
