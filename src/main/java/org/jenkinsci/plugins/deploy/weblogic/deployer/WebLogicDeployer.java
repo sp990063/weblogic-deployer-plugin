@@ -73,7 +73,13 @@ public class WebLogicDeployer {
         args.add("-targets");
         args.add(ParameterValueResolver.resolveEnvVar(parameter.getDeploymentTargets(), envars));
         args.add("-adminurl");
-        args.add("t3://" +ParameterValueResolver.resolveEnvVar(parameter.getEnvironment().getHost(), envars)+":"+ParameterValueResolver.resolveEnvVar(parameter.getEnvironment().getPort(), envars));
+        
+        String adminUrl = ParameterValueResolver.resolveEnvVar(parameter.getEnvironment().getHost(), envars)+":"+ParameterValueResolver.resolveEnvVar(parameter.getEnvironment().getPort(), envars);
+        if(parameter.getProtocol() != null){
+        	args.add(parameter.getProtocol() + "://" + adminUrl);
+        } else {
+        	args.add("t3://" + adminUrl);
+        }
         
         // Authentication by keystore can be possible
         switch(parameter.getEnvironment().getAuthMode() != null ? parameter.getEnvironment().getAuthMode() : WebLogicAuthenticationMode.BY_LOGIN){

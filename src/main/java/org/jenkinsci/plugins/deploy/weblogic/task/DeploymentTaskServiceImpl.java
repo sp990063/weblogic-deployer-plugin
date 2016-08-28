@@ -229,7 +229,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         WebLogicDeployerParameters deployWebLogicDeployerParameters = new WebLogicDeployerParameters(
         		build,launcher,listener, selectedJdk, task.getDeploymentName(), task.getIsLibrary(), task.getDeploymentTargets(),
         		weblogicEnvironmentTargeted, artifactName, sourceFile, WebLogicCommand.DEPLOY, false,
-        		getDescriptor().getJavaOpts(),getDescriptor().getExtraClasspath(), task.getStageMode(), task.getDeploymentPlan());
+        		getDescriptor().getJavaOpts(),getDescriptor().getExtraClasspath(), task.getStageMode(), task.getDeploymentPlan(), task.getProtocol());
         String[] deployCommand = WebLogicDeployer.getWebLogicCommandLine(deployWebLogicDeployerParameters, envVars);
         listener.getLogger().println("[WeblogicDeploymentPlugin] - DEPLOYING ARTIFACT...");
         deploymentLogOut.write("------------------------------------  ARTIFACT DEPLOYMENT ------------------------------------------------\r\n".getBytes());
@@ -262,7 +262,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 		WebLogicDeployerParameters undeployWebLogicDeployerParameters = new WebLogicDeployerParameters(
 				build, launcher, listener, selectedJdk, task.getDeploymentName(), task.getIsLibrary(), task.getDeploymentTargets(),
 				weblogicEnvironmentTargeted, artifactName, null, WebLogicCommand.UNDEPLOY, true,
-				getDescriptor().getJavaOpts(), getDescriptor().getExtraClasspath(), task.getStageMode(), null);
+				getDescriptor().getJavaOpts(), getDescriptor().getExtraClasspath(), task.getStageMode(), null, task.getProtocol());
 		String[] undeployCommand = WebLogicDeployer.getWebLogicCommandLine(undeployWebLogicDeployerParameters, envVars);
         
         deploymentLogOut.write("------------------------------------  ARTIFACT UNDEPLOYMENT ------------------------------------------------\r\n".getBytes());
@@ -315,7 +315,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 		WebLogicDeployerParameters executionDeployerParameters = new WebLogicDeployerParameters(
 				build, launcher, listener, selectedJdk, task.getDeploymentName(), task.getIsLibrary(), task.getDeploymentTargets(),
 				weblogicEnvironmentTargeted, artifactName, sourceFile, null, true,
-				getDescriptor().getJavaOpts(), getDescriptor().getExtraClasspath(), task.getStageMode(), task.getDeploymentPlan());
+				getDescriptor().getJavaOpts(), getDescriptor().getExtraClasspath(), task.getStageMode(), task.getDeploymentPlan(), task.getProtocol());
 		
 		
 		String[] commandLines = StringUtils.split(task.getCommandLine(), WebLogicDeploymentPluginConstantes.WL_DEPLOYMENT_CMD_LINE_SEPARATOR);

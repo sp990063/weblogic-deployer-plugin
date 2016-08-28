@@ -81,6 +81,11 @@ public class DeploymentTask  extends AbstractDescribableImpl<DeploymentTask> imp
 	 * Name of the deployment plan to use when deploying the resource
 	 */
 	private final String deploymentPlan;
+	
+	/**
+	 * The protocol to use with operation. By default t3
+	 */
+	private final WebLogicOperationProcotol protocol;
 
     /**
      * Invoke only during data backup
@@ -97,12 +102,13 @@ public class DeploymentTask  extends AbstractDescribableImpl<DeploymentTask> imp
      * @param stageMode
      * @param commandLine
      * @param deploymentPlan
+     * @param protocol
      */
 	@DataBoundConstructor
 	public DeploymentTask(String id, String taskName, String weblogicEnvironmentTargetedName, String deploymentName, 
   		String deploymentTargets, boolean isLibrary, String builtResourceRegexToDeploy, String baseResourcesGeneratedDirectory, String jdkName, String jdkHome, 
   		WebLogicStageMode stageMode,
-  		String commandLine, String deploymentPlan) {
+  		String commandLine, String deploymentPlan, WebLogicOperationProcotol protocol) {
 		if (id == null) {
 			this.id = RandomStringUtils.randomAlphanumeric(10);
 		} else {
@@ -121,6 +127,7 @@ public class DeploymentTask  extends AbstractDescribableImpl<DeploymentTask> imp
 		this.stageMode = stageMode;
 		this.commandLine = commandLine;
       	this.deploymentPlan = deploymentPlan;
+      	this.protocol = protocol != null ? protocol : WebLogicOperationProcotol.t3;
 	}
 	
 	public DeploymentTask(DeploymentTask deploymentTask) {
@@ -135,7 +142,8 @@ public class DeploymentTask  extends AbstractDescribableImpl<DeploymentTask> imp
 		this.jdk = deploymentTask.getJdk();
 		this.stageMode = deploymentTask.getStageMode();
 		this.commandLine = deploymentTask.getCommandLine();
-	  	this.deploymentPlan = deploymentTask.getDeploymentPlan();		
+	  	this.deploymentPlan = deploymentTask.getDeploymentPlan();
+	  	this.protocol = deploymentTask.getProtocol();
 	}
 	
 	
@@ -259,6 +267,9 @@ public class DeploymentTask  extends AbstractDescribableImpl<DeploymentTask> imp
 	public void setDeploymentTargets(String deploymentTargets) {
 		this.deploymentTargets = deploymentTargets;
 	}
-	
+
+	public WebLogicOperationProcotol getProtocol() {
+		return protocol;
+	}
 	
 }

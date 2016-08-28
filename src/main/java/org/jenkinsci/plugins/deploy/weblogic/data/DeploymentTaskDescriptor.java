@@ -33,10 +33,17 @@ public class DeploymentTaskDescriptor extends Descriptor<DeploymentTask> {
 	}
 
 	/**
-	 * @return the weblogicStageMode
+	 * @return the list of available stage modes
 	 */
 	public WebLogicStageMode[] getWeblogicStageModes() {
 		return WebLogicStageMode.values();
+	}
+	
+	/**
+	 * @return the list of available protocols
+	 */
+	public WebLogicOperationProcotol[] getWeblogicOperationProtocols() {
+		return WebLogicOperationProcotol.values();
 	}
     
     

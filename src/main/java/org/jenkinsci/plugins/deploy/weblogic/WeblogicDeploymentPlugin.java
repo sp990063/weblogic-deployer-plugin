@@ -48,6 +48,7 @@ import org.jenkinsci.plugins.deploy.weblogic.configuration.WeblogicDeploymentCon
 import org.jenkinsci.plugins.deploy.weblogic.data.DeploymentTask;
 import org.jenkinsci.plugins.deploy.weblogic.data.DeploymentTaskResult;
 import org.jenkinsci.plugins.deploy.weblogic.data.WebLogicDeploymentStatus;
+import org.jenkinsci.plugins.deploy.weblogic.data.WebLogicOperationProcotol;
 import org.jenkinsci.plugins.deploy.weblogic.data.WebLogicPreRequisteStatus;
 import org.jenkinsci.plugins.deploy.weblogic.data.WebLogicStageMode;
 import org.jenkinsci.plugins.deploy.weblogic.data.WeblogicEnvironment;
@@ -143,7 +144,7 @@ public class WeblogicDeploymentPlugin extends Recorder {
         // ATTENTION : Appele au moment de la sauvegarde : On conserve la compatibilite ascendante
 		this.tasks = CollectionUtils.isNotEmpty(tasks) ? tasks : Arrays.asList(new DeploymentTask[]{
 				new DeploymentTask(null, null, weblogicEnvironmentTargetedName, deploymentName, deploymentTargets, isLibrary,
-						builtResourceRegexToDeploy, baseResourcesGeneratedDirectory , null, null, null, null, deploymentPlan)
+						builtResourceRegexToDeploy, baseResourcesGeneratedDirectory , null, null, null, null, deploymentPlan, null)
 				});
 		this.mustExitOnFailure = mustExitOnFailure;
         this.selectedDeploymentStrategyIds = selectedDeploymentStrategyIds;
@@ -497,11 +498,18 @@ public class WeblogicDeploymentPlugin extends Recorder {
 		}
 
 		/**
-		 * @return the weblogicStageMode
+		 * @return the list of available stage modes
 		 */
 		public WebLogicStageMode[] getWeblogicStageModes() {
 			return WebLogicStageMode.values();
 		}
+		
+//		/**
+//		 * @return the list of available protocols
+//		 */
+//		public WebLogicOperationProcotol[] getWeblogicOperationProtocols() {
+//			return WebLogicOperationProcotol.values();
+//		}
 		
 		/*
 		 * (non-Javadoc)
