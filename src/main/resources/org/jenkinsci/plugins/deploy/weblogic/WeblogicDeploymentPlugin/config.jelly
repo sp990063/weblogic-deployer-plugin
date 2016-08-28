@@ -43,23 +43,15 @@
 			<f:entry title="${%ForceStopOnFirstFailure}" field="forceStopOnFirstFailure">
 		  		<f:checkbox name="forceStopOnFirstFailure" checked="${instance.forceStopOnFirstFailure}" />
 		  	</f:entry>
-			
-		  	<f:entry title="${%DeploymentStrategy}" field="selectedDeploymentStrategyIds">
-		  		<select class="setting-input" multiple="multiple" size="3" name="selectedDeploymentStrategyIds">    		
-					<!-- valeur par defaut -->
-					<f:option value="unknown">${%NoSpecified}</f:option>
-					<!-- liste des causes referencees-->
-					<f:option value="hudson.model.Cause\\$LegacyCodeCause" selected="${instance.selectedDeploymentStrategyIds.contains('hudson.model.Cause\\$LegacyCodeCause')}">${%Cause.LegacyCodeCause}</f:option>
-					<f:option value="hudson.model.Cause\\$UserCause" selected="${instance.selectedDeploymentStrategyIds.contains('hudson.model.Cause\\$UserCause')}">${%Cause.UserCause}</f:option>
-					<f:option value="hudson.model.Cause\\$UserIdCause" selected="${instance.selectedDeploymentStrategyIds.contains('hudson.model.Cause\\$UserIdCause')}">${%Cause.UserIdCause}</f:option>
-					<f:option value="hudson.model.Cause\\$RemoteCause" selected="${instance.selectedDeploymentStrategyIds.contains('hudson.model.Cause\\$RemoteCause')}">${%Cause.RemoteCause}</f:option>
-		    		<f:option value="hudson.model.Cause\\$UpstreamCause" selected="${instance.selectedDeploymentStrategyIds.contains('hudson.model.Cause\\$UpstreamCause')}">${%Cause.UpstreamCause}</f:option>
-		    		<f:option value="org.jenkinsci.plugins.deploy.weblogic.trigger.DeploymentTrigger\\$DeploymentTriggerCause" selected="${instance.selectedDeploymentStrategyIds.contains('org.jenkinsci.plugins.deploy.weblogic.trigger.DeploymentTrigger\\$DeploymentTriggerCause')}">${%Cause.DeploymentTriggerCause}</f:option>
-		    		<f:option value="hudson.triggers.SCMTrigger\\$SCMTriggerCause" selected="${instance.selectedDeploymentStrategyIds.contains('hudson.triggers.SCMTrigger\\$SCMTriggerCause')}">${%Cause.SCMTriggerCause}</f:option>
-					<f:option value="hudson.triggers.TimerTrigger\\$TimerTriggerCause" selected="${instance.selectedDeploymentStrategyIds.contains('hudson.triggers.TimerTrigger\\$TimerTriggerCause')}">${%Cause.TimerTriggerCause}</f:option>
-				</select>
-			</f:entry>
-			
+
+			<!-- Deployment policies -->
+			<f:nested>
+				<f:entry title="${%policy.title}">
+                    <f:hetero-list name="policies" hasHeader="true" oneEach="true" addCaption="${%policy.label.add}"
+                        descriptors="${descriptor.getDeploymentPolicyDescriptors()}" items="${instance.policies}" />
+				</f:entry>
+			</f:nested>
+
 			<f:entry title="${%SourceManagementDeploymentCriteria}" field="isDeployingOnlyWhenUpdates">
 		  		<f:checkbox name="isDeployingOnlyWhenUpdates" checked="${instance.isDeployingOnlyWhenUpdatese}" />
 		  	</f:entry>
