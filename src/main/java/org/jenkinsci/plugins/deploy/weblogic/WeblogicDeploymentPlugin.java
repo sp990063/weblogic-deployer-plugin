@@ -5,6 +5,7 @@ package org.jenkinsci.plugins.deploy.weblogic;
 
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.init.Initializer;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -12,15 +13,18 @@ import hudson.model.Action;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.BuildListener;
 import hudson.model.Cause;
+import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.model.JDK;
 import hudson.model.Job;
 import hudson.model.Result;
+import hudson.model.Saveable;
 import hudson.model.TopLevelItem;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 
 import java.io.File;
@@ -52,6 +56,7 @@ import org.jenkinsci.plugins.deploy.weblogic.data.WebLogicOperationProcotol;
 import org.jenkinsci.plugins.deploy.weblogic.data.WebLogicPreRequisteStatus;
 import org.jenkinsci.plugins.deploy.weblogic.data.WebLogicStageMode;
 import org.jenkinsci.plugins.deploy.weblogic.data.WeblogicEnvironment;
+import org.jenkinsci.plugins.deploy.weblogic.data.policy.AbstractDeploymentPolicy;
 import org.jenkinsci.plugins.deploy.weblogic.exception.DeploymentTaskException;
 import org.jenkinsci.plugins.deploy.weblogic.exception.LoadingFileException;
 import org.jenkinsci.plugins.deploy.weblogic.jdk.JdkToolService;
@@ -76,9 +81,7 @@ import com.google.inject.Inject;
  */
 @Extension
 public class WeblogicDeploymentPlugin extends Recorder {
-	
-	public static transient final String NON_DEPLOYMENT_STRATEGY_VALUE_SPECIFIED = "unknown";
-	
+
 	public static transient final String DEFAULT_JAVA_OPTIONS_DEPLOYER = "-Xms256M -Xmx256M";
 	
 	@Inject
@@ -97,8 +100,8 @@ public class WeblogicDeploymentPlugin extends Recorder {
 	/**
 	 * strategies de deploiement (rattache a un trigger de build)
 	 */
-	private List<String> selectedDeploymentStrategyIds;
-	
+	private transient List<String> selectedDeploymentStrategyIds;
+
 	/**
 	 * le deploiement est effectif uniquement si les sources ont changes
 	 */
@@ -115,7 +118,14 @@ public class WeblogicDeploymentPlugin extends Recorder {
 	 * Deployment task list
 	 */
 	private List<DeploymentTask> tasks = new ArrayList<DeploymentTask>();
-	
+
+	/**
+	 * Deployment policy list
+	 *
+	 * @since 3.5
+	 */
+	private DescribableList<AbstractDeploymentPolicy, Descriptor<AbstractDeploymentPolicy>> policies;
+
 	public WeblogicDeploymentPlugin() {
 		super();
 	}
@@ -133,6 +143,15 @@ public class WeblogicDeploymentPlugin extends Recorder {
 	 * @param deployedProjectsDependencies
 	 * @param isDeployingOnlyWhenUpdates
 	 * @param forceStopOnFirstFailure
+	 * @param buildUnstableWhenDeploymentUnstable
+	 * @param weblogicEnvironmentTargetedName
+	 * @param deploymentName
+	 * @param deploymentTargets
+	 * @param isLibrary
+	 * @param builtResourceRegexToDeploy
+	 * @param baseResourcesGeneratedDirectory
+	 * @param deploymentPlan
+	 * @param policies
 	 * @since 2.0
 	 */
 	@DataBoundConstructor
@@ -140,20 +159,58 @@ public class WeblogicDeploymentPlugin extends Recorder {
     		String deployedProjectsDependencies, boolean isDeployingOnlyWhenUpdates, boolean forceStopOnFirstFailure,
     		boolean buildUnstableWhenDeploymentUnstable, String weblogicEnvironmentTargetedName, String deploymentName, 
     		String deploymentTargets, boolean isLibrary, String builtResourceRegexToDeploy, String baseResourcesGeneratedDirectory, 
-    		String deploymentPlan) {
+    		String deploymentPlan, List<AbstractDeploymentPolicy> policies) {
         // ATTENTION : Appele au moment de la sauvegarde : On conserve la compatibilite ascendante
 		this.tasks = CollectionUtils.isNotEmpty(tasks) ? tasks : Arrays.asList(new DeploymentTask[]{
 				new DeploymentTask(null, null, weblogicEnvironmentTargetedName, deploymentName, deploymentTargets, isLibrary,
 						builtResourceRegexToDeploy, baseResourcesGeneratedDirectory , null, null, null, null, deploymentPlan, null)
 				});
 		this.mustExitOnFailure = mustExitOnFailure;
-        this.selectedDeploymentStrategyIds = selectedDeploymentStrategyIds;
+		this.selectedDeploymentStrategyIds = selectedDeploymentStrategyIds;
         this.deployedProjectsDependencies = deployedProjectsDependencies;
         this.isDeployingOnlyWhenUpdates = isDeployingOnlyWhenUpdates;
         this.forceStopOnFirstFailure = forceStopOnFirstFailure;
         this.buildUnstableWhenDeploymentUnstable = buildUnstableWhenDeploymentUnstable;
+		this.policies = new DescribableList<AbstractDeploymentPolicy, Descriptor<AbstractDeploymentPolicy>>(Saveable.NOOP, Util.fixNull(policies));
 		// TODO Si on veut faire du controle
     }
+
+	protected Object readResolve() {
+		if (CollectionUtils.isNotEmpty(selectedDeploymentStrategyIds)) {
+			this.policies = new DescribableList<AbstractDeploymentPolicy, Descriptor<AbstractDeploymentPolicy>>(Saveable.NOOP, Util.fixNull(toDeploymentPolicyList(clearDeploymentStrategyIds(selectedDeploymentStrategyIds), isDeployingOnlyWhenUpdates)));
+		}
+		return this;
+	}
+
+	private List<AbstractDeploymentPolicy> toDeploymentPolicyList(List<String> deploymentStrategyIds, boolean deployingOnlyWhenUpdates) {
+		List<AbstractDeploymentPolicy> policies = new ArrayList<AbstractDeploymentPolicy>();
+		List<Descriptor<AbstractDeploymentPolicy>> descriptors = Jenkins.getInstance().getDescriptorList(AbstractDeploymentPolicy.class);
+		for (Descriptor<AbstractDeploymentPolicy> descriptor : descriptors) {
+			try {
+				AbstractDeploymentPolicy policy = descriptor.clazz.getConstructor(Boolean.TYPE).newInstance(deployingOnlyWhenUpdates);
+				for (String deploymentStrategyId : deploymentStrategyIds) {
+					if (policy.getCauseClass().getName().equals(deploymentStrategyId)) {
+						policies.add(policy);
+					}
+				}
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return policies;
+	}
+
+	/**
+	 * On ne controle la desactivation que si la strategie a ete definie
+	 * gestion des classes privees : les tokens \$ sont transformees en $
+	 */
+	private List<String> clearDeploymentStrategyIds(List<String> deploymentStrategyIds) {
+		List<String> cleared = new ArrayList<String>();
+		for (String deploymentStrategyId : deploymentStrategyIds){
+			cleared.add(StringUtils.remove(deploymentStrategyId, '\\'));
+		}
+		return cleared;
+	}
 
 	/**
 	 * 
@@ -197,7 +254,14 @@ public class WeblogicDeploymentPlugin extends Recorder {
 	public List<DeploymentTask> getTasks() {
 		return tasks;
 	}
-	
+
+	/**
+	 * @return the policies
+	 */
+	public List<AbstractDeploymentPolicy> getPolicies() {
+		return policies;
+	}
+
 	/**
 	 * @return the forceStopOnFirstFailure
 	 */
@@ -220,10 +284,10 @@ public class WeblogicDeploymentPlugin extends Recorder {
 	 */
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        
+
         //Pre-requis ko , arret du traitement
         List<DeploymentTaskResult> results = new ArrayList<DeploymentTaskResult>();
-        WebLogicPreRequisteStatus check = checkPreRequisites( build, launcher, listener);
+        WebLogicPreRequisteStatus check = checkPreRequisites(build, listener);
         if(check != WebLogicPreRequisteStatus.OK){
         	results.add(new DeploymentTaskResult(check, WebLogicDeploymentStatus.DISABLED, null, null));
         	return exitPerformAction(build, listener, results);
@@ -252,33 +316,25 @@ public class WeblogicDeploymentPlugin extends Recorder {
 	/**
 	 * 
 	 * @param build
-	 * @param launcher
 	 * @param listener
 	 * @return
 	 */
-	private WebLogicPreRequisteStatus checkPreRequisites(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener){
+	private WebLogicPreRequisteStatus checkPreRequisites(AbstractBuild<?, ?> build, BuildListener listener){
 		
 		//Verification desactivation plugin
 		if(getDescriptor().isPluginDisabled()){
 			listener.getLogger().println("[WeblogicDeploymentPlugin] - The plugin execution is disabled.");
 			return WebLogicPreRequisteStatus.PLUGIN_DISABLED;
 		}
-				
-		//Verification coherence du (des) declencheur(s)
-		boolean isSpecifiedDeploymentStrategyValue = true;
-		if(CollectionUtils.isEmpty(selectedDeploymentStrategyIds) || 
-				(selectedDeploymentStrategyIds.size() == 1 && selectedDeploymentStrategyIds.contains(NON_DEPLOYMENT_STRATEGY_VALUE_SPECIFIED))){
-			isSpecifiedDeploymentStrategyValue = false;
-		}
-		
-		if(isSpecifiedDeploymentStrategyValue && !hasAtLeastOneBuildCauseChecked(build, selectedDeploymentStrategyIds)){
-			listener.getLogger().println("[WeblogicDeploymentPlugin] - Current build causes do not contain any of the configured (configured=" +StringUtils.join(selectedDeploymentStrategyIds,';')+ ") (currents=" +StringUtils.join(build.getCauses(),';')+ ") : The plugin execution is disabled.");
+
+		if (!policies.isEmpty() && !hasAtLeastOneBuildCauseChecked(build)) {
+			listener.getLogger().println("[WeblogicDeploymentPlugin] - Current build causes (" + StringUtils.join(build.getCauses(), ", ") + ") do not contain any of the configured (" + StringUtils.join(policies, ", ") + "). The plugin execution is disabled.");
 			return WebLogicPreRequisteStatus.OTHER_TRIGGER_CAUSE;
 		}
 		
 		//Verification strategie relative a la gestion des sources (systematique (par defaut) / uniquement sur modification(actif) )
 		if(isDeployingOnlyWhenUpdates && build.getChangeSet().isEmptySet()) {
-			listener.getLogger().println("[WeblogicDeploymentPlugin] - No changes : The plugin execution is disabled.");
+			listener.getLogger().println("[WeblogicDeploymentPlugin] - No changes. The plugin execution is disabled.");
 			return WebLogicPreRequisteStatus.NO_CHANGES;
 		}
 		
@@ -291,7 +347,7 @@ public class WeblogicDeploymentPlugin extends Recorder {
 				TopLevelItem item = Hudson.getInstance().getItem(listeDependances[i]);
 				if(item instanceof Job){
 					WatchingWeblogicDeploymentAction deploymentAction = ((Job<?,?>) item).getLastBuild().getAction(WatchingWeblogicDeploymentAction.class);
-					listener.getLogger().println("[WeblogicDeploymentPlugin] - satisfying dependencies project involved : " + item.getName());
+					listener.getLogger().println("[WeblogicDeploymentPlugin] - Satisfying dependencies project involved: " + item.getName());
 					if(deploymentAction != null && CollectionUtils.exists(deploymentAction.getResults(), new TaskStatusUnSuccesfullPredicate())){
 						satisfiedDependenciesDeployments = false;
 					}
@@ -299,7 +355,7 @@ public class WeblogicDeploymentPlugin extends Recorder {
 			}
 			
 			if(!satisfiedDependenciesDeployments){
-				listener.getLogger().println("[WeblogicDeploymentPlugin] - Not satisfied project dependencies deployment : The plugin execution is disabled.");
+				listener.getLogger().println("[WeblogicDeploymentPlugin] - Not satisfied project dependencies deployment. The plugin execution is disabled.");
 				return WebLogicPreRequisteStatus.UNSATISFIED_DEPENDENCIES;
 			}
 		}
@@ -312,7 +368,27 @@ public class WeblogicDeploymentPlugin extends Recorder {
 
 		return WebLogicPreRequisteStatus.OK;		
 	}
-	
+
+	/**
+	 *
+	 * @param build
+	 * @return
+	 */
+	private boolean hasAtLeastOneBuildCauseChecked(AbstractBuild<?, ?> build) {
+		for (Cause cause : build.getCauses()) {
+			for (AbstractDeploymentPolicy policy : policies) {
+				if (policy.getCauseClass().getName().equals(cause.getClass().getName())) {
+					if (!policy.isDeployingOnlyWhenUpdates()) {
+						return true;
+					} else if (!build.getChangeSet().isEmptySet()) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
 	/*
 	 * 	(non-Javadoc)
 	 * @see hudson.model.AbstractDescribableImpl#getDescriptor()
@@ -714,33 +790,12 @@ public class WeblogicDeploymentPlugin extends Recorder {
 		public boolean isApplicable(Class<? extends AbstractProject> jobType) {
 				return true;
 		}
-	}
-	
-	
-	/**
-	 * 
-	 * @param build
-	 * @param deploymentStrategies
-	 * @return
-	 */
-	private boolean hasAtLeastOneBuildCauseChecked(AbstractBuild<?, ?> build, List<String> deploymentStrategies) {
-		boolean isProperlyBuildCause = false;
-		//On ne controle la desactivation que si la strategie a ete definie
-		//gestion des classes privees : les tokens \$ sont transformees en $
-		List<String> searchedCauseIds = new ArrayList<String>();
-		for(String elt : deploymentStrategies){
-			searchedCauseIds.add(StringUtils.remove(elt, '\\'));
+
+		public List<? extends Descriptor<AbstractDeploymentPolicy>> getDeploymentPolicyDescriptors() {
+			return Jenkins.getInstance().getDescriptorList(AbstractDeploymentPolicy.class);
 		}
-		
-		List<Cause> causes = build.getCauses();
-		for(Cause cause : causes){
-			if(searchedCauseIds.contains(cause.getClass().getName())) {
-				isProperlyBuildCause = true;
-			}
-		}
-		return isProperlyBuildCause;
 	}
-	
+
 	/**
 	 * 
 	 * @param build
