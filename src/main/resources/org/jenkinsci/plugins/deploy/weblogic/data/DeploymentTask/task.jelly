@@ -58,6 +58,13 @@
 			    	</j:forEach>
 				</select>
 			</f:entry>
+			<f:entry title="${%wl.configuration.protocol}" field="protocol">
+				<select  class="setting-input" name="protocol">
+				   	<j:forEach var="inst" items="${descriptor.weblogicOperationProtocols}">
+			    		<f:option value="${inst.name()}" selected="${inst.name() == it.protocol.name()}" >${inst.name()}</f:option>
+			    	</j:forEach>
+				</select>
+			</f:entry>
 		</f:entry>
 		<f:entry title="${%wl.deployment.command}">
 			<f:entry title="${%wl.deployement.command.ligne}" field="commandLine">

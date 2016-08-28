@@ -3,6 +3,7 @@
  */
 package org.jenkinsci.plugins.deploy.weblogic.deployer;
 
+import org.jenkinsci.plugins.deploy.weblogic.data.WebLogicOperationProcotol;
 import org.jenkinsci.plugins.deploy.weblogic.data.WebLogicStageMode;
 import org.jenkinsci.plugins.deploy.weblogic.data.WeblogicEnvironment;
 
@@ -51,6 +52,8 @@ public class WebLogicDeployerParameters {
 	
 	private String deploymentPlan;
 	
+	private WebLogicOperationProcotol protocol = WebLogicOperationProcotol.t3;
+	
 	public WebLogicDeployerParameters(){}
 	
 	
@@ -75,7 +78,7 @@ public class WebLogicDeployerParameters {
 
 
 	/**
-	 * 	
+	 * 
 	 * @param build
 	 * @param launcher
 	 * @param listener
@@ -88,13 +91,18 @@ public class WebLogicDeployerParameters {
 	 * @param source
 	 * @param command
 	 * @param silentMode
+	 * @param javaOpts
+	 * @param classpath
+	 * @param stageMode
+	 * @param deploymentPlan
+	 * @param protocol
 	 */
 	public WebLogicDeployerParameters(AbstractBuild<?, ?> build,
 			Launcher launcher, BuildListener listener, JDK usedJdk,
 			String deploymentName, boolean isLibrary, String deploymentTargets,
 			WeblogicEnvironment environment, String artifactName, String source,
 			WebLogicCommand command, boolean silentMode,String javaOpts, String classpath,
-			WebLogicStageMode stageMode, String deploymentPlan) {
+			WebLogicStageMode stageMode, String deploymentPlan, WebLogicOperationProcotol protocol) {
 		super();
 		this.build = build;
 		this.launcher = launcher;
@@ -112,6 +120,7 @@ public class WebLogicDeployerParameters {
 		this.classpath = classpath;
 		this.stageMode = stageMode;
 		this.deploymentPlan = deploymentPlan;
+		this.protocol = protocol;
 	}
 
 	/**
@@ -331,4 +340,16 @@ public class WebLogicDeployerParameters {
 	public void setDeploymentPlan(String deploymentPlan) {
 		this.deploymentPlan = deploymentPlan;
 	}
+
+
+	public WebLogicOperationProcotol getProtocol() {
+		return protocol;
+	}
+
+
+	public void setProtocol(WebLogicOperationProcotol protocol) {
+		this.protocol = protocol;
+	}
+	
+	
 }
