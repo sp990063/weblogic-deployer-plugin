@@ -14,6 +14,6 @@ public interface DeploymentTaskService {
 	 * 
 	 * @param task
 	 */
-	public DeploymentTaskResult perform(DeploymentTask task, String globalJdk, AbstractBuild<?, ?> build, BuildListener listener, Launcher launcher) throws DeploymentTaskException;
+	DeploymentTaskResult perform(DeploymentTask task, String globalJdk, AbstractBuild<?, ?> build, BuildListener listener, Launcher launcher) throws DeploymentTaskException;
 
 }
