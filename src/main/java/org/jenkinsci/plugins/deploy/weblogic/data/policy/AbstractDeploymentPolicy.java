@@ -15,7 +15,6 @@ public abstract class AbstractDeploymentPolicy extends AbstractDescribableImpl<A
 
     private boolean deployingOnlyWhenUpdates;
 
-    @DataBoundConstructor
     public AbstractDeploymentPolicy(boolean deployingOnlyWhenUpdates) {
         this.deployingOnlyWhenUpdates = deployingOnlyWhenUpdates;
     }
