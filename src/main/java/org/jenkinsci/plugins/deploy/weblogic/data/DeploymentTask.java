@@ -85,7 +85,7 @@ public class DeploymentTask  extends AbstractDescribableImpl<DeploymentTask> imp
 	/**
 	 * The protocol to use with operation. By default t3
 	 */
-	private final WebLogicOperationProcotol protocol;
+	private WebLogicOperationProcotol protocol;
 
     /**
      * Invoke only during data backup
@@ -127,7 +127,7 @@ public class DeploymentTask  extends AbstractDescribableImpl<DeploymentTask> imp
 		this.stageMode = stageMode;
 		this.commandLine = commandLine;
       	this.deploymentPlan = deploymentPlan;
-      	this.protocol = protocol != null ? protocol : WebLogicOperationProcotol.t3;
+      	this.protocol = protocol;
 	}
 	
 	public DeploymentTask(DeploymentTask deploymentTask) {
@@ -271,5 +271,11 @@ public class DeploymentTask  extends AbstractDescribableImpl<DeploymentTask> imp
 	public WebLogicOperationProcotol getProtocol() {
 		return protocol;
 	}
+
+	public void setProtocol(WebLogicOperationProcotol protocol) {
+		this.protocol = protocol;
+	}
+	
+	
 	
 }
