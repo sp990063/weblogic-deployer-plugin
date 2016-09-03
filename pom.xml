@@ -10,7 +10,7 @@
 
 	<artifactId>weblogic-deployer-plugin</artifactId>
 	<name>Deploy WebLogic Plugin</name>
-	<version>3.6-SNAPSHOT</version>
+	<version>3.5-SNAPSHOT</version>
 	<!-- <packaging>jpi</packaging> -->
 	<packaging>hpi</packaging>
 
