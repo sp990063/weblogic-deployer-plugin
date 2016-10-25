@@ -327,7 +327,7 @@ public class WeblogicDeploymentPlugin extends Recorder {
 			return WebLogicPreRequisteStatus.PLUGIN_DISABLED;
 		}
 
-		if (!policies.isEmpty() && !hasAtLeastOneBuildCauseChecked(build)) {
+		if (policies != null  && !policies.isEmpty() && !hasAtLeastOneBuildCauseChecked(build)) {
 			listener.getLogger().println("[WeblogicDeploymentPlugin] - Current build causes (" + StringUtils.join(build.getCauses(), ", ") + ") do not contain any of the configured (" + StringUtils.join(policies, ", ") + "). The plugin execution is disabled.");
 			return WebLogicPreRequisteStatus.OTHER_TRIGGER_CAUSE;
 		}
