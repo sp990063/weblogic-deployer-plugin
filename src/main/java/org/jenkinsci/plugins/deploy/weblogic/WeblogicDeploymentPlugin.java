@@ -698,8 +698,12 @@ public class WeblogicDeploymentPlugin extends Recorder {
         		return FormValidation.error("The weblogic library has to be filled in.");
         	}
         	
-        	if(! new File(value).exists()) {
-        		return FormValidation.error("The file " + value + " does not exists.");
+        	// If more than one library is specified, we check them each.
+        	String[] libs = value.split(File.pathSeparator);
+        	for(String lib : libs) {
+        		if(! new File(lib).exists()) {
+            		return FormValidation.error("The file " + lib + " does not exists.");
+            	}	
         	}
         	
         	return FormValidation.ok();
