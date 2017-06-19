@@ -69,8 +69,8 @@ public class WebLogicDeployer {
         
         if(StringUtils.isNotBlank(parameter.getSource())) {
         	args.add("-source");
-        	args.add(parameter.getSource());
-            //args.add("\""+new File(parameter.getSource()).getAbsolutePath()+"\"");
+        	//args.add(parameter.getSource());
+            args.add(new File(parameter.getSource()).getAbsolutePath());
         }
 
         args.add("-targets");
@@ -145,7 +145,8 @@ public class WebLogicDeployer {
 			parameter.getListener().error("[WeblogicDeploymentPlugin] - No JDK selected to deploy artifact.");
 		    throw new RunnerAbortedException();
 		}
-		args.add(parameter.getUsedJdk().getBinDir().getAbsolutePath().concat(File.pathSeparator).concat("java"));
+		args.add(parameter.getUsedJdk().getBinDir().getAbsolutePath().concat("/java"));
+//		args.add(parameter.getUsedJdk().getBinDir().getAbsolutePath().concat(File.separator).concat("java"));
 		        
 		//java options specifique
 		if(StringUtils.isNotBlank(parameter.getJavaOpts())){
