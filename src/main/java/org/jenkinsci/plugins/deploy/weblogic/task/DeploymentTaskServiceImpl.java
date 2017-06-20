@@ -233,8 +233,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         String[] deployCommand = WebLogicDeployer.getWebLogicCommandLine(deployWebLogicDeployerParameters, envVars);
         listener.getLogger().println("[WeblogicDeploymentPlugin] - DEPLOYING ARTIFACT...");
         deploymentLogOut.write("------------------------------------  ARTIFACT DEPLOYMENT ------------------------------------------------\r\n".getBytes());
-        final Proc deploymentProc = launcher.launch().cmds(deployCommand).envs(envVars).stdout(deploymentLogOut).start();
-        int exitStatus = deploymentProc.join();
+        int exitStatus = launcher.launch().cmds(deployCommand).envs(envVars).stdout(deploymentLogOut).join();
         if(exitStatus != 0){
 //        	listener.error("[WeblogicDeploymentPlugin] - Command " +StringUtils.join(deployCommand, '|')+" completed abnormally (exit code = "+exitStatus+")");
         	throw new RuntimeException("task completed abnormally (exit code = "+exitStatus+")");
