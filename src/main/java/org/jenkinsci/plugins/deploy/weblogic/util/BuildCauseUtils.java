@@ -7,7 +7,7 @@ import java.util.List;
 
 
 /**
- * @author RaphC
+ * @author rchaumie
  *
  */
 public final class BuildCauseUtils {
