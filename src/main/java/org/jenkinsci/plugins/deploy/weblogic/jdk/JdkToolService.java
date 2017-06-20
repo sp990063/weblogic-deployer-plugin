@@ -3,6 +3,8 @@
  */
 package org.jenkinsci.plugins.deploy.weblogic.jdk;
 
+import java.io.File;
+
 import hudson.Launcher;
 import hudson.model.TaskListener;
 import hudson.model.Hudson;
@@ -78,7 +80,7 @@ public static final String EXTERNAL_ENV_JDK = "environment";
 		String out = null;
 		for(JDK jdk : getJdkToolAvailables()) {
 			if(jdk.getName().equalsIgnoreCase(name)){
-				out = jdk.getHome();
+				out = new File(jdk.getHome()).getAbsolutePath();
 			}
 		}
 		return out;
