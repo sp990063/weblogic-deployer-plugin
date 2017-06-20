@@ -70,6 +70,7 @@ public class WebLogicDeployer {
         if(StringUtils.isNotBlank(parameter.getSource())) {
         	args.add("-source");
         	//args.add(parameter.getSource());
+//            args.add(String.format("\"%s\"", new File(parameter.getSource()).getAbsolutePath()));
             args.add("\'"+new File(parameter.getSource()).getAbsolutePath()+"\'");
         }
 
