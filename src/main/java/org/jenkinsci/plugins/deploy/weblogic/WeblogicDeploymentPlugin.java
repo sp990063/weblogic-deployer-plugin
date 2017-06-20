@@ -64,6 +64,7 @@ import org.jenkinsci.plugins.deploy.weblogic.properties.WebLogicDeploymentPlugin
 import org.jenkinsci.plugins.deploy.weblogic.task.DeploymentTaskService;
 import org.jenkinsci.plugins.deploy.weblogic.task.PreRequisiteStatusUnSuccesfullPredicate;
 import org.jenkinsci.plugins.deploy.weblogic.task.TaskStatusUnSuccesfullPredicate;
+import org.jenkinsci.plugins.deploy.weblogic.util.BuildCauseUtils;
 import org.jenkinsci.plugins.deploy.weblogic.util.DeployerClassPathUtils;
 import org.jenkinsci.plugins.deploy.weblogic.util.URLUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -328,7 +329,8 @@ public class WeblogicDeploymentPlugin extends Recorder {
 		}
 
 		if (policies != null  && !policies.isEmpty() && !hasAtLeastOneBuildCauseChecked(build)) {
-			listener.getLogger().println("[WeblogicDeploymentPlugin] - Current build causes (" + StringUtils.join(build.getCauses(), ", ") + ") do not contain any of the configured (" + StringUtils.join(policies, ", ") + "). The plugin execution is disabled.");
+			listener.getLogger().println("[WeblogicDeploymentPlugin] - Current build cause(s) \"" + BuildCauseUtils.formatToString(build.getCauses()) + "\" do(es) not contain any of the configured \"Deployment Policies\". The plugin execution is disabled.");
+			listener.getLogger().println("[WeblogicDeploymentPlugin] - Verify at \"Post-build Actions > Deploy the artifact to any Weblogic environments  > Deployment policies\" if all the appropriate policies are applied according to enabled build triggers.");
 			return WebLogicPreRequisteStatus.OTHER_TRIGGER_CAUSE;
 		}
 		
