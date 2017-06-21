@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
@@ -11,7 +10,7 @@
 
 	<artifactId>weblogic-deployer-plugin</artifactId>
 	<name>Deploy WebLogic Plugin</name>
-	<version>3.7-SNAPSHOT</version>
+	<version>3.7</version>
 	<packaging>hpi</packaging>
 
 	<url>http://wiki.jenkins-ci.org/display/JENKINS/WebLogic+Deployer+Plugin</url>
@@ -37,7 +36,7 @@
 		<connection>scm:ssh://git@github.com/jenkinsci/weblogic-deployer-plugin.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com/jenkinsci/weblogic-deployer-plugin.git</developerConnection>
 		<url>https://github.com/jenkinsci/weblogic-deployer-plugin</url>
-		<tag>HEAD</tag>
+		<tag>weblogic-deployer-plugin-3.7</tag>
 	</scm>
 
 	<properties>
