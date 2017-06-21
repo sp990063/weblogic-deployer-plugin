@@ -54,6 +54,8 @@
 		<java.net.id>raphael_c</java.net.id>
 		<maven.compiler.source>1.6</maven.compiler.source>
 		<maven.compiler.target>1.6</maven.compiler.target> -->
+		<!--TODO: change to true after the code cleanup-->
+    	<findbugs.failOnError>false</findbugs.failOnError>
 	</properties>
 
 
