@@ -5,16 +5,17 @@ package org.jenkinsci.plugins.deploy.weblogic.deployer;
 
 import java.io.File;
 
-import hudson.EnvVars;
-import hudson.FilePath;
-import hudson.model.Run.RunnerAbortedException;
-import hudson.util.ArgumentListBuilder;
-
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.deploy.weblogic.data.WebLogicAuthenticationMode;
 import org.jenkinsci.plugins.deploy.weblogic.data.WebLogicStageMode;
 import org.jenkinsci.plugins.deploy.weblogic.properties.WebLogicDeploymentPluginConstantes;
+import org.jenkinsci.plugins.deploy.weblogic.util.DeployerClassPathUtils;
 import org.jenkinsci.plugins.deploy.weblogic.util.ParameterValueResolver;
+
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.model.Run.RunnerAbortedException;
+import hudson.util.ArgumentListBuilder;
 
 /**
  * @author rchaumie
@@ -150,7 +151,8 @@ public class WebLogicDeployer {
 
 		// On prend le path de l'exe sur le remote
 		args.add(new FilePath(parameter.getBuild().getBuiltOn().getChannel(), parameter.getUsedJdk().getHome().concat("/bin/java")).getRemote());
-		
+//		args.add(parameter.getUsedJdk().getBinDir().getAbsolutePath().concat("/java"));
+
 		//java options specifique
 		if(StringUtils.isNotBlank(parameter.getJavaOpts())){
 			//On parse l'ensemble des options et on les rajoute des le args[]
@@ -166,12 +168,16 @@ public class WebLogicDeployer {
 			parameter.getListener().error("[WeblogicDeploymentPlugin] - Classpath is not set. Please configure correctly the plugin.");
 			throw new RunnerAbortedException();
 		}
-		// TODO : On devrait copier les elements aux classpath dans le workspace et pointer directement dessus pour eviter les pb de chemins erronés en architecture master-slave
-		// TODO : On doit verifier que les librairies sont bien presentes si on les copie pas et remonter l'information de facon claire pour aider à l'analyse.
-		String remotingJar = parameter.getClasspath();
+		String remotingJar = StringUtils.EMPTY;
+		// On recalcule le classpath à partir du workspace si on est en remote
+		if(! StringUtils.EMPTY.equalsIgnoreCase(parameter.getBuild().getBuiltOnStr())){
+			remotingJar = DeployerClassPathUtils.formatClasspath(parameter.getClasspath(), parameter.getBuild(), parameter.getListener());
+		} else {
+			remotingJar = parameter.getClasspath();
+		}
+		
 		args.add(remotingJar);
 		args.add(WebLogicDeploymentPluginConstantes.WL_WEBLOGIC_API_DEPLOYER_MAIN_CLASS);
 		        
 	}
-	
 }

@@ -3,6 +3,7 @@
  */
 package org.jenkinsci.plugins.deploy.weblogic.task;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -47,6 +48,7 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.JDK;
 import hudson.model.Node;
+import hudson.remoting.VirtualChannel;
 
 /**
  * @author Raphael
@@ -89,7 +91,6 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 		try {
 			
 			listener.getLogger().println("[WeblogicDeploymentPlugin] - Loading JDK '"+globalJdk+"' ...");
-			// TODO potentiellement le JDK a pu etre supprime pourtant on garde la conf et le node aussi
 			selectedJdk = JdkToolService.getJDKByName(node, globalJdk);
 			
 			if(selectedJdk == null){
@@ -102,7 +103,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 				throw new RequiredJDKNotFoundException("Unable to find the JDK's executable ["+selectedJdk.getName()+", exec: "+new FilePath(node.getChannel(), selectedJdk.getHome().concat("/bin/java")).getRemote()+"] on node : "+node.getNodeName()+"("+node.getLabelString()+")");
 			}
 			
-			// Check version. On loggue systematiquement sans faire de controle car non bloquant
+			// Check version.
 			JdkToolService.checkJdkVersion(node, selectedJdk, listener.getLogger());
 		} catch (IOException e) {
 			listener.getLogger().println("[WeblogicDeploymentPlugin] - Unable to load JDK '"+globalJdk+"' from node '"+node+"'. The plugin execution is disabled.");
@@ -147,9 +148,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
             throw new DeploymentTaskException(new DeploymentTaskResult(WebLogicPreRequisteStatus.OK, WebLogicDeploymentStatus.ABORTED, convertParameters(task, envVars), null));
         }
 		
-		//Deploiement
-		//Recuperation du parametrage
-		WeblogicEnvironment weblogicEnvironmentTargeted = null;
+		// Filtrage, parametrage et deploiement
 		try {
             
 			//Gestion de liste d'exclusions
@@ -161,15 +160,20 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 			}
 			
 			//Recuperation du parametrage
-			weblogicEnvironmentTargeted = getWeblogicEnvironmentTargeted(task.getWeblogicEnvironmentTargetedName(), listener);
+			WeblogicEnvironment weblogicEnvironmentTargeted = getWeblogicEnvironmentTargeted(task.getWeblogicEnvironmentTargetedName(), listener);
 			
 			if(weblogicEnvironmentTargeted == null){
 				listener.error("[WeblogicDeploymentPlugin] - WebLogic environment Name " +task.getWeblogicEnvironmentTargetedName()+ " not found in the list. Please check the configuration file.");
 				throw new DeploymentTaskException(new DeploymentTaskResult(WebLogicPreRequisteStatus.OK, WebLogicDeploymentStatus.ABORTED, convertParameters(task, envVars), fullArtifactFinalName));
 			}
+			
+			// copie des libraries sur le remote node
+			if(! StringUtils.EMPTY.equalsIgnoreCase(build.getBuiltOnStr())){
+				copyWeblogicLibraries(build, listener, launcher, getDescriptor().getExtraClasspath());
+			}
+			
+			//Deploiement
 			listener.getLogger().println("[WeblogicDeploymentPlugin] - Deploying the artifact on the following target : (name="+task.getWeblogicEnvironmentTargetedName()+") (host=" + weblogicEnvironmentTargeted.getHost() + ") (port=" +weblogicEnvironmentTargeted.getPort()+ ")");
-			
-			
 			if(StringUtils.isBlank(task.getCommandLine())){
 				// undeploy task
 				undeploy(task, build, listener, launcher, weblogicEnvironmentTargeted, selectedJdk, artifactName, deploymentLogOut, envVars);
@@ -434,6 +438,22 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 		return out;
 	}
 	
+	private void copyWeblogicLibraries(AbstractBuild<?, ?> build, BuildListener listener, Launcher launcher, String classpath) throws IOException, InterruptedException{
+		FilePath fp = null;
+		if(build.getWorkspace().isRemote()) {
+		    VirtualChannel channel = build.getWorkspace().getChannel();
+		    for(String path : classpath.split(File.pathSeparator)){
+		    	FilePath srcFile = new FilePath(new File(path));
+		    	fp = new FilePath(channel, build.getWorkspace() + "/"+srcFile.getName());
+		    	if(! fp.exists()){
+		    		listener.getLogger().println("[WeblogicDeploymentPlugin] - copying file "+srcFile.getName()+" on node "+build.getBuiltOnStr()+" ...");
+		    		fp.copyFrom(srcFile);
+		    	} else {
+		    		listener.getLogger().println("[WeblogicDeploymentPlugin] - file "+srcFile.getName()+" already exists in workspace on node "+build.getBuiltOnStr()+".");
+		    	}
+		    }
+		}
+	}
 	
 
 	/**
