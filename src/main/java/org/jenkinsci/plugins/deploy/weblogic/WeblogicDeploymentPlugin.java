@@ -14,7 +14,6 @@ import hudson.model.AutoCompletionCandidates;
 import hudson.model.BuildListener;
 import hudson.model.Cause;
 import hudson.model.Descriptor;
-import hudson.model.Hudson;
 import hudson.model.JDK;
 import hudson.model.Job;
 import hudson.model.Result;
@@ -131,10 +130,10 @@ public class WeblogicDeploymentPlugin extends Recorder {
 		super();
 	}
 	
-	@Initializer
-	public static void load(){
-		JdkToolService.loadJdkToolAvailables();
-	}
+//	@Initializer
+//	public static void load(){
+//		JdkToolService.loadJdkToolAvailables();
+//	}
 	
 	/**
 	 * Invoque lors de la mise a jour des configurations des projets ayant active le plugin et de la mise a jour globale
@@ -346,7 +345,7 @@ public class WeblogicDeploymentPlugin extends Recorder {
 		if(StringUtils.isNotBlank(deployedProjectsDependencies)){
 			String[] listeDependances = StringUtils.split(StringUtils.trim(deployedProjectsDependencies), ',');
 			for(int i = 0; i<listeDependances.length; i++){
-				TopLevelItem item = Hudson.getInstance().getItem(listeDependances[i]);
+				TopLevelItem item = Jenkins.getInstance().getItem(listeDependances[i]);
 				if(item instanceof Job){
 					WatchingWeblogicDeploymentAction deploymentAction = ((Job<?,?>) item).getLastBuild().getAction(WatchingWeblogicDeploymentAction.class);
 					listener.getLogger().println("[WeblogicDeploymentPlugin] - Satisfying dependencies project involved: " + item.getName());
@@ -727,31 +726,31 @@ public class WeblogicDeploymentPlugin extends Recorder {
         	return FormValidation.ok();
         }
         
-        /**
-         * This method provides auto-completion items for the 'jdkName' field.
-         * Stapler finds this method via the naming convention.
-         *
-         * @param value
-         *      The text that the user entered.
-         */
-        public AutoCompletionCandidates doAutoCompleteJdkName(@QueryParameter String value) {
-            AutoCompletionCandidates c = new AutoCompletionCandidates();
-            for (JDK jdk : JdkToolService.getJdkToolAvailables()) {
-                if (jdk.getName().contains(value.toLowerCase())) {
-                	c.add(jdk.getName());
-                }
-            }
-            return c;
-        }
-
-        @JavaScriptMethod
-        public String completeJdkHome(String jdkName) {
-        	JDK jdk = JdkToolService.getJDKByName(jdkName);
-        	if(jdk != null){
-        		 return jdk.getHome();
-        	}
-        	return "";
-        }
+//        /**
+//         * This method provides auto-completion items for the 'jdkName' field.
+//         * Stapler finds this method via the naming convention.
+//         *
+//         * @param value
+//         *      The text that the user entered.
+//         */
+//        public AutoCompletionCandidates doAutoCompleteJdkName(@QueryParameter String value) {
+//            AutoCompletionCandidates c = new AutoCompletionCandidates();
+//            for (JDK jdk : JdkToolService.getJdkToolAvailables()) {
+//                if (jdk.getName().contains(value.toLowerCase())) {
+//                	c.add(jdk.getName());
+//                }
+//            }
+//            return c;
+//        }
+//
+//        @JavaScriptMethod
+//        public String completeJdkHome(String jdkName) {
+//        	JDK jdk = JdkToolService.getJDKByName(jdkName);
+//        	if(jdk != null){
+//        		 return jdk.getHome();
+//        	}
+//        	return "";
+//        }
         
         /**
          * 

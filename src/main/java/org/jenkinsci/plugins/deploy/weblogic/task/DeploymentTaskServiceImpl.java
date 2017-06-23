@@ -3,16 +3,6 @@
  */
 package org.jenkinsci.plugins.deploy.weblogic.task;
 
-import hudson.EnvVars;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.Proc;
-import hudson.model.BuildListener;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.JDK;
-
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -25,14 +15,14 @@ import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.deploy.weblogic.ArtifactSelector;
 import org.jenkinsci.plugins.deploy.weblogic.FreeStyleJobArtifactSelectorImpl;
-import org.jenkinsci.plugins.deploy.weblogic.WeblogicDeploymentPluginLog;
 import org.jenkinsci.plugins.deploy.weblogic.WeblogicDeploymentPlugin.WeblogicDeploymentPluginDescriptor;
+import org.jenkinsci.plugins.deploy.weblogic.WeblogicDeploymentPluginLog;
+import org.jenkinsci.plugins.deploy.weblogic.data.DeploymentTask;
 import org.jenkinsci.plugins.deploy.weblogic.data.DeploymentTaskResult;
 import org.jenkinsci.plugins.deploy.weblogic.data.TransfertConfiguration;
 import org.jenkinsci.plugins.deploy.weblogic.data.WebLogicDeploymentStatus;
 import org.jenkinsci.plugins.deploy.weblogic.data.WebLogicPreRequisteStatus;
 import org.jenkinsci.plugins.deploy.weblogic.data.WeblogicEnvironment;
-import org.jenkinsci.plugins.deploy.weblogic.data.DeploymentTask;
 import org.jenkinsci.plugins.deploy.weblogic.deployer.WebLogicCommand;
 import org.jenkinsci.plugins.deploy.weblogic.deployer.WebLogicDeployer;
 import org.jenkinsci.plugins.deploy.weblogic.deployer.WebLogicDeployerParameters;
@@ -42,10 +32,21 @@ import org.jenkinsci.plugins.deploy.weblogic.exception.RequiredJDKNotFoundExcept
 import org.jenkinsci.plugins.deploy.weblogic.jdk.JdkToolService;
 import org.jenkinsci.plugins.deploy.weblogic.properties.WebLogicDeploymentPluginConstantes;
 import org.jenkinsci.plugins.deploy.weblogic.util.FTPUtils;
-import org.jenkinsci.plugins.deploy.weblogic.util.VarUtils;
 import org.jenkinsci.plugins.deploy.weblogic.util.ParameterValueResolver;
+import org.jenkinsci.plugins.deploy.weblogic.util.VarUtils;
 
 import com.google.inject.Inject;
+
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.Proc;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.JDK;
+import hudson.model.Node;
 
 /**
  * @author Raphael
@@ -84,25 +85,33 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 		// Recuperation du JDK
 		// The default JDK
 		JDK selectedJdk = null;
+		Node node = build.getBuiltOn();
 		try {
 			
-			if(task.getJdk() != null && task.getJdk().getExists()){
-				selectedJdk = task.getJdk(); 
-			} else {
-				selectedJdk = JdkToolService.getJDKByName(globalJdk);
-			}
+			listener.getLogger().println("[WeblogicDeploymentPlugin] - Loading JDK '"+globalJdk+"' ...");
+			// TODO potentiellement le JDK a pu etre supprime pourtant on garde la conf et le node aussi
+			selectedJdk = JdkToolService.getJDKByName(node, globalJdk);
 			
+			if(selectedJdk == null){
+				throw new RequiredJDKNotFoundException("No JDK '"+globalJdk+"' found on node "+node.getNodeName()+"("+node.getLabelString()+") .");
+			}	
+				
 			// Check exists
-			if(selectedJdk == null || ! selectedJdk.getExists()){
-				String execu = selectedJdk != null ? selectedJdk.getHome(): "";
-				throw new RequiredJDKNotFoundException("Unable to find PATH to the JDK's executable ["+execu+"]");
+			listener.getLogger().println("[WeblogicDeploymentPlugin] - Checking if JDK '"+globalJdk+"' exists on node "+node.getNodeName()+"("+node.getLabelString()+") ...");
+			if(! JdkToolService.isJDKValid(node, selectedJdk)){
+				throw new RequiredJDKNotFoundException("Unable to find the JDK's executable ["+selectedJdk.getName()+", exec: "+new FilePath(node.getChannel(), selectedJdk.getHome().concat("/bin/java")).getRemote()+"] on node : "+node.getNodeName()+"("+node.getLabelString()+")");
 			}
 			
-			// Check version
-			JdkToolService.checkJdkVersion(selectedJdk, listener.getLogger());
-			
+			// Check version. On loggue systematiquement sans faire de controle car non bloquant
+			JdkToolService.checkJdkVersion(node, selectedJdk, listener.getLogger());
+		} catch (IOException e) {
+			listener.getLogger().println("[WeblogicDeploymentPlugin] - Unable to load JDK '"+globalJdk+"' from node '"+node+"'. The plugin execution is disabled.");
+			throw new DeploymentTaskException(new DeploymentTaskResult(WebLogicPreRequisteStatus.OK, WebLogicDeploymentStatus.ABORTED, convertParameters(task, envVars), null));
+		} catch (InterruptedException e) {
+			listener.getLogger().println("[WeblogicDeploymentPlugin] - Unable to load JDK '"+globalJdk+"' from node '"+node+"'. The plugin execution is disabled.");
+			throw new DeploymentTaskException(new DeploymentTaskResult(WebLogicPreRequisteStatus.OK, WebLogicDeploymentStatus.ABORTED, convertParameters(task, envVars), null));
 		} catch (RequiredJDKNotFoundException rjnfe) {
-			listener.getLogger().println("[WeblogicDeploymentPlugin] - No JDK found. The plugin execution is disabled.");
+			listener.getLogger().println("[WeblogicDeploymentPlugin] - No JDK found [reason : "+rjnfe.getMessage()+"]. The plugin execution is disabled.");
 			throw new DeploymentTaskException(new DeploymentTaskResult(WebLogicPreRequisteStatus.OK, WebLogicDeploymentStatus.ABORTED, convertParameters(task, envVars), null));
 		}
 		listener.getLogger().println("[WeblogicDeploymentPlugin] - The JDK " +selectedJdk.getHome() + " will be used.");
@@ -350,11 +359,6 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 	private DeploymentTask convertParameters(DeploymentTask task, EnvVars envVars) {
 		DeploymentTask taskHistory = new DeploymentTask(task);
 		taskHistory.setDeploymentTargets(ParameterValueResolver.resolveEnvVar(task.getDeploymentTargets(), envVars));
-//		task.getWeblogicEnvironmentTargetedName();
-//		ParameterValueResolver.resolveEnvVar(parameter.getEnvironment().getHost(), envars);
-//		ParameterValueResolver.resolveEnvVar(parameter.getEnvironment().getPort(), envars);
-//		ParameterValueResolver.resolveEnvVar(parameter.getEnvironment().getLogin(), envars));
-//		ParameterValueResolver.resolveEnvVar(parameter.getEnvironment().getPassword(), envars);
 		return taskHistory;
 	}
 	

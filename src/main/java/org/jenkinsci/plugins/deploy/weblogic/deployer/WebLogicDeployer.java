@@ -6,6 +6,7 @@ package org.jenkinsci.plugins.deploy.weblogic.deployer;
 import java.io.File;
 
 import hudson.EnvVars;
+import hudson.FilePath;
 import hudson.model.Run.RunnerAbortedException;
 import hudson.util.ArgumentListBuilder;
 
@@ -146,9 +147,10 @@ public class WebLogicDeployer {
 			parameter.getListener().error("[WeblogicDeploymentPlugin] - No JDK selected to deploy artifact.");
 		    throw new RunnerAbortedException();
 		}
-		args.add(parameter.getUsedJdk().getBinDir().getAbsolutePath().concat("/java"));
-//		args.add(parameter.getUsedJdk().getBinDir().getAbsolutePath().concat(File.separator).concat("java"));
-		        
+
+		// On prend le path de l'exe sur le remote
+		args.add(new FilePath(parameter.getBuild().getBuiltOn().getChannel(), parameter.getUsedJdk().getHome().concat("/bin/java")).getRemote());
+		
 		//java options specifique
 		if(StringUtils.isNotBlank(parameter.getJavaOpts())){
 			//On parse l'ensemble des options et on les rajoute des le args[]
@@ -164,6 +166,8 @@ public class WebLogicDeployer {
 			parameter.getListener().error("[WeblogicDeploymentPlugin] - Classpath is not set. Please configure correctly the plugin.");
 			throw new RunnerAbortedException();
 		}
+		// TODO : On devrait copier les elements aux classpath dans le workspace et pointer directement dessus pour eviter les pb de chemins erronés en architecture master-slave
+		// TODO : On doit verifier que les librairies sont bien presentes si on les copie pas et remonter l'information de facon claire pour aider à l'analyse.
 		String remotingJar = parameter.getClasspath();
 		args.add(remotingJar);
 		args.add(WebLogicDeploymentPluginConstantes.WL_WEBLOGIC_API_DEPLOYER_MAIN_CLASS);

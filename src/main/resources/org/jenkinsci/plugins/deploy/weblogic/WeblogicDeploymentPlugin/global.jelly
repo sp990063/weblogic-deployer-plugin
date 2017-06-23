@@ -1,4 +1,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  
+  <j:invokeStatic var="jdkTools" className="org.jenkinsci.plugins.deploy.weblogic.jdk.JdkToolService" method="getJdkToolAvailables" />
+	
   <f:section title="${%WebLogic Deployment Plugin}">
     <f:entry title="${%ExtraClasspath}" field="extraClasspath">
     	<f:textbox name="extraClasspath" value="${descriptor.extraClasspath}"/>
@@ -9,13 +12,14 @@
     <f:advanced>
 	    <f:entry title="${%JdkHome}" field="jdkSelected">
 			<select  class="setting-input" name="jdkSelected">
-				<!-- valeur de la JVM active -->
-				<f:option selected="${descriptor.jdkSelected == 'system'}" value="system">${%System}</f:option>
-				<!-- valeur par defaut : current -->
-				<f:option selected="${descriptor.jdkSelected == 'environment'}" value="environment">${%Environment}</f:option>
-				<j:forEach var="jdk" items="${it.jDKs}">
-					<!-- ${jdk.javaHome} ${jdk.executable} ${jdk.binDir} ${jdk.exists} -->
-			    	<f:option selected="${jdk.name == descriptor.jdkSelected}" value="${jdk.name}">${jdk.name}</f:option>
+			    <j:forEach var="jdk" items="${jdkTools}">
+			    	<f:option selected="${jdk.name == descriptor.jdkSelected}" value="${jdk.name}">
+				    	<j:choose>
+						   <j:when test="${jdk.name == 'system'}">${%System}</j:when>
+						   <j:when test="${jdk.name == 'environment'}">${%Environment}</j:when>
+						   <j:otherwise>${jdk.name}</j:otherwise>
+						</j:choose>
+			    	</f:option>
 			    </j:forEach>
 			</select>
 		</f:entry>
