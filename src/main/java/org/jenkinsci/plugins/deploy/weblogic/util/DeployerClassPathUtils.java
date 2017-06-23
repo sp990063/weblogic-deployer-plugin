@@ -4,6 +4,7 @@
 package org.jenkinsci.plugins.deploy.weblogic.util;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.deploy.weblogic.properties.WebLogicDeploymentPluginConstantes;
 
 import hudson.FilePath;
@@ -44,7 +45,17 @@ public class DeployerClassPathUtils {
 	 * @param build
 	 * @return
 	 */
-	public static String formatClasspath(final String classpath, AbstractBuild<?, ?> build,  BuildListener listener){
+	public static String formatAndCheckClasspath(final String classpath, AbstractBuild<?, ?> build,  BuildListener listener){
+		// execution sur un node : il faut reformatter le cp + verifier la presence
+		if(! StringUtils.EMPTY.equalsIgnoreCase(build.getBuiltOnStr())){
+			return formatAndCheckClasspathForNode(classpath, build,  listener);
+		}
+		// si c'est sur le master pour l'instant on ne fait que le check
+		checkClasspath(classpath, build, listener);
+		return classpath;
+	}
+	
+	private static String formatAndCheckClasspathForNode(final String classpath, AbstractBuild<?, ?> build,  BuildListener listener){
 		StringBuilder fromWorkspaceClassPath = new StringBuilder();
 		try {
 			VirtualChannel channel = build.getWorkspace().getChannel();
@@ -68,6 +79,24 @@ public class DeployerClassPathUtils {
 			throw new RunnerAbortedException();
 		}
 		return fromWorkspaceClassPath.toString();
+	}
+	
+	public static void checkClasspath(final String classpath, AbstractBuild<?, ?> build,  BuildListener listener){
+		try {
+			for(String path : classpath.split(File.pathSeparator)){
+				FilePath srcFile = new FilePath(new File(path));
+		    	if(! srcFile.exists()){
+					listener.error("[WeblogicDeploymentPlugin] - The following library '"+srcFile.getName()+"' declared on classpath is missing");
+					throw new RunnerAbortedException();
+				}
+			}
+		} catch (IOException e) {
+			listener.error("[WeblogicDeploymentPlugin] - Unable to check classpath for invocation.", e);
+			throw new RunnerAbortedException();
+		} catch (InterruptedException e) {
+			listener.error("[WeblogicDeploymentPlugin] - Unable to check classpath for invocation.", e);
+			throw new RunnerAbortedException();
+		}
 	}
 	
     /**

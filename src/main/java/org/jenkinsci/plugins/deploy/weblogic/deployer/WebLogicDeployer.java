@@ -168,14 +168,8 @@ public class WebLogicDeployer {
 			parameter.getListener().error("[WeblogicDeploymentPlugin] - Classpath is not set. Please configure correctly the plugin.");
 			throw new RunnerAbortedException();
 		}
-		String remotingJar = StringUtils.EMPTY;
 		// On recalcule le classpath à partir du workspace si on est en remote
-		if(! StringUtils.EMPTY.equalsIgnoreCase(parameter.getBuild().getBuiltOnStr())){
-			remotingJar = DeployerClassPathUtils.formatClasspath(parameter.getClasspath(), parameter.getBuild(), parameter.getListener());
-		} else {
-			remotingJar = parameter.getClasspath();
-		}
-		
+		String	remotingJar = DeployerClassPathUtils.formatAndCheckClasspath(parameter.getClasspath(), parameter.getBuild(), parameter.getListener());
 		args.add(remotingJar);
 		args.add(WebLogicDeploymentPluginConstantes.WL_WEBLOGIC_API_DEPLOYER_MAIN_CLASS);
 		        
