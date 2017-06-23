@@ -1,7 +1,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:p="/lib/hudson/project" xmlns:util="jelly:util">
 	<j:set var="weblogicEnvironments" value="${descriptor.weblogicEnvironments}" />
 
-	<st:bind var="desc" value="${descriptor}"/>
+	<!-- <st:bind var="desc" value="${descriptor}"/>
 	<script>
       function completeJdkhome(jdkName, jdkHomeId) {
       	desc.completeJdkHome(jdkName, function(t) {
@@ -16,7 +16,7 @@
     
     <j:invokeStatic var="jdkHomeSelected" className="org.jenkinsci.plugins.deploy.weblogic.jdk.JdkToolService" method="getJDKHomeByName">
 		<j:arg value="${descriptor.jdkSelected}" />
-	</j:invokeStatic>
+	</j:invokeStatic> -->
 	<j:choose>
 		<j:when test="${! empty(weblogicEnvironments)}">
 			
