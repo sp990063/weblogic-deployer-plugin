@@ -7,6 +7,8 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.deploy.weblogic.properties.WebLogicDeploymentPluginConstantes;
 
+import com.google.common.collect.Lists;
+
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -15,6 +17,7 @@ import hudson.remoting.VirtualChannel;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * @author rchaumie
@@ -56,21 +59,23 @@ public class DeployerClassPathUtils {
 	}
 	
 	private static String formatAndCheckClasspathForNode(final String classpath, AbstractBuild<?, ?> build,  BuildListener listener){
-		StringBuilder fromWorkspaceClassPath = new StringBuilder();
+		List<String> newPaths = Lists.newArrayList();
 		try {
 			VirtualChannel channel = build.getWorkspace().getChannel();
+			String remotePathSeparator = isUnix(channel, new FilePath(channel, build.getWorkspace().getRemote())) ? ":" : ";";
+			String remoteFileSeparator = isUnix(channel, new FilePath(channel, build.getWorkspace().getRemote())) ? "/" : "\\";
 			for(String path : classpath.split(File.pathSeparator)){
 				FilePath srcFile = new FilePath(new File(path));
-		    	FilePath fp = new FilePath(channel, build.getWorkspace() + "/"+srcFile.getName());
+		    	FilePath fp = new FilePath(channel, build.getWorkspace().getRemote().concat(remoteFileSeparator).concat(srcFile.getName()));
 		    	String remotePath = fp.getRemote();
 		    	if(! fp.exists()){
 					listener.error("[WeblogicDeploymentPlugin] - The following library '"+remotePath+"' declared on classpath is missing on node '"+build.getBuiltOnStr()+"'.");
 					throw new RunnerAbortedException();
 				}
-		    	
-		    	// TODO il y a toujours un dernier separator
-		    	fromWorkspaceClassPath.append(remotePath).append(isUnix(channel, remotePath) ? ":" : ";");
+		    	newPaths.add(remotePath);
 			}
+			
+			return StringUtils.join(newPaths, remotePathSeparator);
 		} catch (IOException e) {
 			listener.error("[WeblogicDeploymentPlugin] - Unable to compute classpath for remote invocation.", e);
 			throw new RunnerAbortedException();
@@ -78,7 +83,6 @@ public class DeployerClassPathUtils {
 			listener.error("[WeblogicDeploymentPlugin] - Unable to compute classpath for remote invocation.", e);
 			throw new RunnerAbortedException();
 		}
-		return fromWorkspaceClassPath.toString();
 	}
 	
 	public static void checkClasspath(final String classpath, AbstractBuild<?, ?> build,  BuildListener listener){
@@ -101,13 +105,14 @@ public class DeployerClassPathUtils {
 	
     /**
      * Checks if the remote path is Unix. 
-     * Recuperer de la classe FilePath car methode non acessible en dehors du package
+     * Recupere de la classe FilePath car methode non acessible en dehors du package
      */
-    private static boolean isUnix(VirtualChannel channel, String remote) {
+    private static boolean isUnix(VirtualChannel channel, FilePath fp) {
         // if the path represents a local path, there' no need to guess.
         if(channel == null)
             return File.pathSeparatorChar!=';';
             
+        String remote = fp.getRemote();
         // note that we can't use the usual File.pathSeparator and etc., as the OS of
         // the machine where this code runs and the OS that this FilePath refers to may be different.
 

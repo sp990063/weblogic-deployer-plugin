@@ -442,10 +442,10 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 		    	FilePath srcFile = new FilePath(new File(path));
 		    	fp = new FilePath(channel, build.getWorkspace() + "/"+srcFile.getName());
 		    	if(! fp.exists()){
-		    		listener.getLogger().println("[WeblogicDeploymentPlugin] - copying file "+srcFile.getName()+" on node "+build.getBuiltOnStr()+" ...");
+		    		listener.getLogger().println("[WeblogicDeploymentPlugin] - copying file '"+srcFile.getName()+"' on node "+build.getBuiltOnStr()+" ...");
 		    		fp.copyFrom(srcFile);
 		    	} else {
-		    		listener.getLogger().println("[WeblogicDeploymentPlugin] - file "+srcFile.getName()+" already exists in workspace on node "+build.getBuiltOnStr()+".");
+		    		listener.getLogger().println("[WeblogicDeploymentPlugin] - file '"+srcFile.getName()+"' already exists in workspace on node "+build.getBuiltOnStr()+".");
 		    	}
 		    }
 		}

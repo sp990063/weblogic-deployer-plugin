@@ -172,7 +172,6 @@ public class WeblogicDeploymentPlugin extends Recorder {
         this.forceStopOnFirstFailure = forceStopOnFirstFailure;
         this.buildUnstableWhenDeploymentUnstable = buildUnstableWhenDeploymentUnstable;
 		this.policies = new DescribableList<AbstractDeploymentPolicy, Descriptor<AbstractDeploymentPolicy>>(Saveable.NOOP, Util.fixNull(policies));
-		// TODO Si on veut faire du controle
     }
 
 	protected Object readResolve() {
