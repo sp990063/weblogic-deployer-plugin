@@ -221,7 +221,11 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         	//Par defaut si ftp n'est pas renseigne on prend le host
         	String ftpHost = StringUtils.isBlank(weblogicEnvironmentTargeted.getFtpHost()) ? weblogicEnvironmentTargeted.getHost() : weblogicEnvironmentTargeted.getFtpHost();
         	// path to remote resource
-            remoteFilePath = weblogicEnvironmentTargeted.getRemoteDir() + "/" + fullArtifactFinalName;
+        	if(StringUtils.isBlank(weblogicEnvironmentTargeted.getRemoteDir())){
+        		listener.getLogger().println("[WeblogicDeploymentPlugin] - Remote directory configured in plugin xml configuration must be set for library deployment. Please check your configuration.");
+        		throw new IOException("Remote directory configured in plugin xml configuration must be set for library deployment");
+        	}
+        	remoteFilePath = weblogicEnvironmentTargeted.getRemoteDir().concat("/").concat(fullArtifactFinalName);
             String localFilePath = archivedArtifact.getRemote();
             listener.getLogger().println("[WeblogicDeploymentPlugin] - TRANSFERING LIBRARY : (local=" +localFilePath+ ") (remote=" + remoteFilePath + ") to (ftp=" +ftpHost + "@" +weblogicEnvironmentTargeted.getFtpUser()+ ") ...");
             FTPUtils.transfertFile(new TransfertConfiguration(ftpHost, weblogicEnvironmentTargeted.getFtpUser(), weblogicEnvironmentTargeted.getFtpPassowrd(), localFilePath, remoteFilePath),listener.getLogger());
@@ -302,7 +306,11 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         	//Par defaut si ftp n'est pas renseigne on prend le host
         	String ftpHost = StringUtils.isBlank(weblogicEnvironmentTargeted.getFtpHost()) ? weblogicEnvironmentTargeted.getHost() : weblogicEnvironmentTargeted.getFtpHost();
         	// path to remote resource
-            remoteFilePath = weblogicEnvironmentTargeted.getRemoteDir() + "/" + fullArtifactFinalName;
+        	if(StringUtils.isBlank(weblogicEnvironmentTargeted.getRemoteDir())){
+        		listener.getLogger().println("[WeblogicDeploymentPlugin] - Remote directory configured in plugin xml configuration must be set for library deployment. Please check your configuration.");
+        		throw new IOException("Remote directory configured in plugin xml configuration must be set for library deployment");
+        	}
+        	remoteFilePath = weblogicEnvironmentTargeted.getRemoteDir().concat("/").concat(fullArtifactFinalName);
             String localFilePath = archivedArtifact.getRemote();
             listener.getLogger().println("[WeblogicDeploymentPlugin] - TRANSFERING LIBRARY : (local=" +fullArtifactFinalName+ ") (remote=" + remoteFilePath + ") to (ftp=" +ftpHost + "@" +weblogicEnvironmentTargeted.getFtpUser()+ ") ...");
             FTPUtils.transfertFile(new TransfertConfiguration(ftpHost, weblogicEnvironmentTargeted.getFtpUser(), weblogicEnvironmentTargeted.getFtpPassowrd(), localFilePath, remoteFilePath),listener.getLogger());
