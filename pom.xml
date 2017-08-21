@@ -10,7 +10,7 @@
 
 	<artifactId>weblogic-deployer-plugin</artifactId>
 	<name>Deploy WebLogic Plugin</name>
-	<version>4.0-SNAPSHOT</version>
+	<version>4.0</version>
 	<packaging>hpi</packaging>
 
 	<url>http://wiki.jenkins-ci.org/display/JENKINS/WebLogic+Deployer+Plugin</url>
@@ -36,7 +36,7 @@
 		<connection>scm:ssh://git@github.com/jenkinsci/weblogic-deployer-plugin.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com/jenkinsci/weblogic-deployer-plugin.git</developerConnection>
 		<url>https://github.com/jenkinsci/weblogic-deployer-plugin</url>
-		<tag>HEAD</tag>
+		<tag>weblogic-deployer-plugin-4.0</tag>
 	</scm>
 
 	<properties>
