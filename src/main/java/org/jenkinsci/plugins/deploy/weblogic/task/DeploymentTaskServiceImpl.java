@@ -243,7 +243,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         String[] deployCommand = WebLogicDeployer.getWebLogicCommandLine(deployWebLogicDeployerParameters, envVars);
         listener.getLogger().println("[WeblogicDeploymentPlugin] - DEPLOYING ARTIFACT...");
         deploymentLogOut.write("------------------------------------  ARTIFACT DEPLOYMENT ------------------------------------------------\r\n".getBytes());
-        int exitStatus = launcher.launch().cmds(deployCommand).envs(envVars).stdout(deploymentLogOut).join();
+        int exitStatus = launcher.launch().cmds(deployCommand).quiet(true).envs(envVars).stdout(deploymentLogOut).join();
         if(exitStatus != 0){
         	throw new RuntimeException("task completed abnormally (exit code = "+exitStatus+")");
         }
@@ -275,7 +275,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         
         deploymentLogOut.write("------------------------------------  ARTIFACT UNDEPLOYMENT ------------------------------------------------\r\n".getBytes());
         listener.getLogger().println("[WeblogicDeploymentPlugin] - UNDEPLOYING ARTIFACT...");
-        final Proc undeploymentProc = launcher.launch().cmds(undeployCommand).envs(envVars).stdout(deploymentLogOut).start();
+        final Proc undeploymentProc = launcher.launch().cmds(undeployCommand).quiet(true).envs(envVars).stdout(deploymentLogOut).start();
         undeploymentProc.join();
         listener.getLogger().println("[WeblogicDeploymentPlugin] - ARTIFACT UNDEPLOYED SUCCESSFULLY.");
 	}
@@ -340,7 +340,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         	
         	deploymentLogOut.write("------------------------------------  TASK EXECUTION ------------------------------------------------\r\n".getBytes());
             listener.getLogger().println("[WeblogicDeploymentPlugin] - EXECUTING TASK ...");
-	        int exitStatus = launcher.launch().cmds(executionCommand).envs(envVars).stdout(deploymentLogOut).join();
+	        int exitStatus = launcher.launch().cmds(executionCommand).quiet(true).envs(envVars).stdout(deploymentLogOut).join();
 	        if(exitStatus != 0){
 	        	throw new RuntimeException("task completed abnormally (exit code = "+exitStatus+"). Check your Weblogic Deployment logs.");
 	        }
