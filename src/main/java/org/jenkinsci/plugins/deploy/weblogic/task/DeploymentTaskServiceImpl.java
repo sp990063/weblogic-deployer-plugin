@@ -184,7 +184,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 			
         } catch (Throwable e) {
         	e.printStackTrace(listener.getLogger());
-        	listener.error("[WeblogicDeploymentPlugin] - Failed to deploy.");
+        	listener.error("[WeblogicDeploymentPlugin] - Failed to deploy. Check your Weblogic deployment logs.");
             throw new DeploymentTaskException(new DeploymentTaskResult(WebLogicPreRequisteStatus.OK, WebLogicDeploymentStatus.FAILED, convertParameters(task, envVars), fullArtifactFinalName));
         } finally {
         	IOUtils.closeQuietly(deploymentLogOut);
@@ -229,7 +229,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
             String localFilePath = archivedArtifact.getRemote();
             listener.getLogger().println("[WeblogicDeploymentPlugin] - TRANSFERING LIBRARY : (local=" +localFilePath+ ") (remote=" + remoteFilePath + ") to (ftp=" +ftpHost + "@" +weblogicEnvironmentTargeted.getFtpUser()+ ") ...");
             FTPUtils.transfertFile(new TransfertConfiguration(ftpHost, weblogicEnvironmentTargeted.getFtpUser(), weblogicEnvironmentTargeted.getFtpPassowrd(), localFilePath, remoteFilePath),listener.getLogger());
-        	listener.getLogger().println("[WeblogicDeploymentPlugin] - LIBRARY TRANSFERED SUCCESSFULLY.");
+        	listener.getLogger().println("[WeblogicDeploymentPlugin] - Library transfered successfully.");
         	//source file correspond au remote file pour les librairies
         	sourceFile = remoteFilePath;
         } else {
@@ -245,7 +245,7 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         deploymentLogOut.write("------------------------------------  ARTIFACT DEPLOYMENT ------------------------------------------------\r\n".getBytes());
         int exitStatus = launcher.launch().cmds(deployCommand).quiet(true).envs(envVars).stdout(deploymentLogOut).join();
         if(exitStatus != 0){
-        	throw new RuntimeException("task completed abnormally (exit code = "+exitStatus+")");
+        	throw new RuntimeException("task completed abnormally (exit code = "+exitStatus+"). Check your Weblogic Deployment logs.");
         }
         listener.getLogger().println("[WeblogicDeploymentPlugin] - Artifact deployed successfully.");
 	}
@@ -338,13 +338,13 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         	String[] executionCommand = WebLogicDeployer.getWebLogicCommandLine(executionDeployerParameters, newCommand, envVars);
         	
         	deploymentLogOut.write("------------------------------------  TASK EXECUTION ------------------------------------------------\r\n".getBytes());
-            listener.getLogger().println("[WeblogicDeploymentPlugin] - EXECUTING TASK ...");
+            listener.getLogger().println("[WeblogicDeploymentPlugin] - Executing task ...");
 	        int exitStatus = launcher.launch().cmds(executionCommand).quiet(true).envs(envVars).stdout(deploymentLogOut).join();
 	        if(exitStatus != 0){
 	        	throw new RuntimeException("task completed abnormally (exit code = "+exitStatus+"). Check your Weblogic Deployment logs.");
 	        }
         }
-        listener.getLogger().println("[WeblogicDeploymentPlugin] - ARTIFACT DEPLOYED SUCCESSFULLY.");
+        listener.getLogger().println("[WeblogicDeploymentPlugin] - Artifact deployed successfully.");
 	}
 
 	/**
