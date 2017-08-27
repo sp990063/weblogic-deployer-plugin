@@ -241,13 +241,13 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
         		weblogicEnvironmentTargeted, artifactName, sourceFile, WebLogicCommand.DEPLOY, false,
         		getDescriptor().getJavaOpts(),getDescriptor().getExtraClasspath(), task.getStageMode(), task.getDeploymentPlan(), task.getProtocol());
         String[] deployCommand = WebLogicDeployer.getWebLogicCommandLine(deployWebLogicDeployerParameters, envVars);
-        listener.getLogger().println("[WeblogicDeploymentPlugin] - DEPLOYING ARTIFACT...");
+        listener.getLogger().println("[WeblogicDeploymentPlugin] - Deploying artifact ...");
         deploymentLogOut.write("------------------------------------  ARTIFACT DEPLOYMENT ------------------------------------------------\r\n".getBytes());
         int exitStatus = launcher.launch().cmds(deployCommand).quiet(true).envs(envVars).stdout(deploymentLogOut).join();
         if(exitStatus != 0){
         	throw new RuntimeException("task completed abnormally (exit code = "+exitStatus+")");
         }
-        listener.getLogger().println("[WeblogicDeploymentPlugin] - ARTIFACT DEPLOYED SUCCESSFULLY.");
+        listener.getLogger().println("[WeblogicDeploymentPlugin] - Artifact deployed successfully.");
 	}
 	
 	/**
@@ -274,10 +274,9 @@ public class DeploymentTaskServiceImpl implements DeploymentTaskService {
 		String[] undeployCommand = WebLogicDeployer.getWebLogicCommandLine(undeployWebLogicDeployerParameters, envVars);
         
         deploymentLogOut.write("------------------------------------  ARTIFACT UNDEPLOYMENT ------------------------------------------------\r\n".getBytes());
-        listener.getLogger().println("[WeblogicDeploymentPlugin] - UNDEPLOYING ARTIFACT...");
-        final Proc undeploymentProc = launcher.launch().cmds(undeployCommand).quiet(true).envs(envVars).stdout(deploymentLogOut).start();
-        undeploymentProc.join();
-        listener.getLogger().println("[WeblogicDeploymentPlugin] - ARTIFACT UNDEPLOYED SUCCESSFULLY.");
+        listener.getLogger().println("[WeblogicDeploymentPlugin] - Undeploying artifact ...");
+        int exitStatus = launcher.launch().cmds(undeployCommand).quiet(true).envs(envVars).stdout(deploymentLogOut).join();
+        listener.getLogger().println("[WeblogicDeploymentPlugin] - Artifact undeployed successfully.");
 	}
 	
 	/**
