@@ -79,7 +79,9 @@ public class WeblogicEnvironment implements Serializable {
 	 * 
 	 */
 	private WebLogicAuthenticationMode authMode;
-	
+
+	private String jobFolderPath;
+
 	/**
 	 * 	
 	 * @param name
@@ -254,5 +256,12 @@ public class WeblogicEnvironment implements Serializable {
 	public void setAuthMode(WebLogicAuthenticationMode authMode) {
 		this.authMode = authMode;
 	}
-	
+
+	public String getJobFolderPath() {
+		return jobFolderPath;
+	}
+
+	public void setJobFolderPath(String jobFolderPath) {
+		this.jobFolderPath = jobFolderPath;
+	}
 }

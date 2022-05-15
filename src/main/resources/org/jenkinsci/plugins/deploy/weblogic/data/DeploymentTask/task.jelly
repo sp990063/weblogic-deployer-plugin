@@ -4,11 +4,16 @@
 	<f:entry title="${%title.task.name}" field="taskName">
 		<f:textbox value="${it.taskName}"/>
 	</f:entry>
-	
+
+	<f:entry title="${WORKSPACE}" field="weblogicEnvironmentTargetedName">
+	</f:entry>
+
 	<f:entry title="${%Environment}" field="weblogicEnvironmentTargetedName">
 		<select  class="setting-input" name="weblogicEnvironmentTargetedName">
 	       	<j:forEach var="inst" items="${descriptor.weblogicEnvironments}">
-	           	<f:option selected="${inst.name == it.weblogicEnvironmentTargetedName}" value="${inst.name}">${inst.name} (${inst.host}:${inst.port})</f:option>
+	       	    <j:if test="inst.jobFolderPath == ${WORKSPACE}" >
+                    <f:option selected="${inst.name == it.weblogicEnvironmentTargetedName}" value="${inst.name}">${inst.name} (${inst.host}:${inst.port})</f:option>
+                </j:if>
 	        </j:forEach>
 		</select>
 	</f:entry>
