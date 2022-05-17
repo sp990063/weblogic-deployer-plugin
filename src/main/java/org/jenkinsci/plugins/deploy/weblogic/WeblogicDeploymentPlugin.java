@@ -491,20 +491,21 @@ public class WeblogicDeploymentPlugin extends Recorder {
 				if (this.getDescriptorFullUrl() != null) {
 					this.workspace = this.getDescriptorFullUrl().split("descriptorByName")[0];	
 				}	
+				
+				List<WeblogicEnvironment> wlEnvs = new ArrayList<WeblogicEnvironment>();
+				
+				for (WeblogicEnvironment wlEnv : weblogicEnvironments) {
+					if (this.workspace.contains(wlEnv.getJobFolderPath())){
+						wlEnvs.add(wlEnv);
+					}
+				}
+				
+				return wlEnvs.toArray(new WeblogicEnvironment[wlEnvs.size()]);
 			}catch (NullPointerException e) {
 				this.workspace = "";
 			}
 			
-						
-			List<WeblogicEnvironment> wlEnvs = new ArrayList<WeblogicEnvironment>();
-			
-			for (WeblogicEnvironment wlEnv : weblogicEnvironments) {
-				if (this.workspace.contains(wlEnv.getJobFolderPath())){
-					wlEnvs.add(wlEnv);
-				}
-			}
-			
-			return wlEnvs.toArray(new WeblogicEnvironment[wlEnvs.size()]);
+			return weblogicEnvironments;
 			
 		}
 		
