@@ -487,9 +487,14 @@ public class WeblogicDeploymentPlugin extends Recorder {
 				loadWeblogicEnvironments();
 			}
 			
-			if (this.getDescriptorFullUrl() != null) {
-				this.workspace = this.getDescriptorFullUrl().split("descriptorByName")[0];	
+			try {
+				if (this.getDescriptorFullUrl() != null) {
+					this.workspace = this.getDescriptorFullUrl().split("descriptorByName")[0];	
+				}	
+			}catch (NullPointerException e) {
+				this.workspace = "";
 			}
+			
 						
 			List<WeblogicEnvironment> wlEnvs = new ArrayList<WeblogicEnvironment>();
 			
