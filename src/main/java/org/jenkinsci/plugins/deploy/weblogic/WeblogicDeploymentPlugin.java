@@ -4,6 +4,7 @@
 package org.jenkinsci.plugins.deploy.weblogic;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.init.Initializer;
@@ -68,6 +69,7 @@ import org.jenkinsci.plugins.deploy.weblogic.util.DeployerClassPathUtils;
 import org.jenkinsci.plugins.deploy.weblogic.util.URLUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
@@ -125,7 +127,7 @@ public class WeblogicDeploymentPlugin extends Recorder {
 	 * @since 3.5
 	 */
 	private DescribableList<AbstractDeploymentPolicy, Descriptor<AbstractDeploymentPolicy>> policies;
-
+	
 	public WeblogicDeploymentPlugin() {
 		super();
 	}
@@ -442,6 +444,14 @@ public class WeblogicDeploymentPlugin extends Recorder {
 		/**
 		 * 
 		 */
+		
+		private String workspace;
+		
+		/**
+		 * 
+		 */
+		
+		
 		public WeblogicDeploymentPluginDescriptor(){
 			super(WeblogicDeploymentPlugin.class);
 			
@@ -477,7 +487,18 @@ public class WeblogicDeploymentPlugin extends Recorder {
 				loadWeblogicEnvironments();
 			}
 			
-			return weblogicEnvironments;
+			this.workspace = this.getDescriptorFullUrl().split("descriptorByName")[0];
+			
+			List<WeblogicEnvironment> wlEnvs = new ArrayList<WeblogicEnvironment>();
+			
+			for (WeblogicEnvironment wlEnv : weblogicEnvironments) {
+				if (this.workspace.contains(wlEnv.getJobFolderPath())){
+					wlEnvs.add(wlEnv);
+				}
+			}
+			
+			return wlEnvs.toArray(new WeblogicEnvironment[wlEnvs.size()]);
+			
 		}
 		
 		/*
@@ -571,6 +592,14 @@ public class WeblogicDeploymentPlugin extends Recorder {
 		 */
 		public void setJdkSelected(String jdkSelected) {
 			this.jdkSelected = jdkSelected;
+		}
+
+		public String getWorkspace() {
+			return workspace;
+		}
+
+		public void setWorkspace(String workspace) {
+			this.workspace = workspace;
 		}
 
 		/**
@@ -837,7 +866,6 @@ public class WeblogicDeploymentPlugin extends Recorder {
     public void setBuildUnstableWhenDeploymentUnstable(boolean buildUnstableWhenDeploymentUnstable) {
         this.buildUnstableWhenDeploymentUnstable = buildUnstableWhenDeploymentUnstable;
     }
-	
 
 	
 }

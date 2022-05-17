@@ -99,6 +99,24 @@ public class WeblogicEnvironment implements Serializable {
 	}
 	
 	/**
+	 * 	
+	 * @param name
+	 * @param host
+	 * @param port
+	 * @param login
+	 * @param password
+	 * @param jobFolderPath
+	 */
+	public WeblogicEnvironment(String name, String host, String port, String login, String password, String jobFolderPath) {
+		this.name = name;
+		this.host = host;
+		this.port = port;
+		this.login = login;
+		this.password = password;
+		this.jobFolderPath = jobFolderPath;
+	}
+	
+	/**
 	 * 
 	 * @param name
 	 * @param host
